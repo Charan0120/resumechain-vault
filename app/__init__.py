@@ -19,9 +19,13 @@ def create_app():
 
     # ── Config ────────────────────────────────────────────────
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-me")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "postgresql://postgres:password@localhost:5432/resumevault"
-    )
+    
+    # Fix for Render providing 'postgres://' instead of 'postgresql://'
+    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/resumevault")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Mail
