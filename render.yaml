@@ -1,7 +1,5 @@
 databases:
   - name: resumevault-db
-    databaseName: resumevault
-    user: postgres
     plan: free
 
 services:
