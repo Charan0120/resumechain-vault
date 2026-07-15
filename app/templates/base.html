@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="{% block meta_desc %}ResumeVault – Secure resume management with blockchain verification and AES-256 encryption.{% endblock %}" />
+  <title>{% block title %}ResumeVault{% endblock %} – Secure Resume Management</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-mesh">
+
+  <!-- ── Navbar ──────────────────────────────────────────── -->
+  <nav class="navbar">
+    <a href="{{ url_for('main.index') }}" class="navbar-brand">
+      <div class="brand-icon">🔐</div>
+      <span>Resume<span>Vault</span></span>
+    </a>
+
+    <div class="navbar-nav">
+      {% if current_user.is_authenticated %}
+        <span style="font-size:13px;color:var(--text-muted);">
+          Hi, <span style="color:var(--text-secondary);font-weight:500;">{{ current_user.name.split()[0] }}</span>
+        </span>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline btn-sm">📊 Dashboard</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Sign Out</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-sm">Get Started</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- ── Flash Messages ──────────────────────────────────── -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container" style="position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:200;width:90%;max-width:440px;">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {% if category == 'error' %}⚠️{% elif category == 'success' %}✅{% else %}ℹ️{% endif %}
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- ── Page Content ────────────────────────────────────── -->
+  {% block content %}{% endblock %}
+
+  <!-- ── JS ─────────────────────────────────────────────── -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

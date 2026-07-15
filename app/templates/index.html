@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block meta_desc %}ResumeVault – Store, verify, and share your resume with AES-256 encryption and blockchain proofs.{% endblock %}
+
+{% block content %}
+
+<!-- Glow orbs -->
+<div class="orb" style="width:600px;height:600px;top:-180px;left:-180px;background:rgba(124,58,237,0.07);"></div>
+<div class="orb" style="width:400px;height:400px;top:300px;right:-120px;background:rgba(6,182,212,0.05);"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     HERO
+     ══════════════════════════════════════════════════════ -->
+<section class="hero" style="position:relative;z-index:1;">
+
+  <div class="hero-badge anim-1">
+    ⚡ Blockchain-Verified Resume Security
+  </div>
+
+  <h1 class="hero-title anim-2">
+    Your Resume,
+    <span class="gradient-text">Secured &amp; Verified</span>
+    on the Blockchain
+  </h1>
+
+  <p class="hero-subtitle anim-3">
+    ResumeVault uses AES-256 encryption and Polygon blockchain to make your
+    resume tamper-proof. Recruiters can cryptographically verify your credentials
+    with a single click.
+  </p>
+
+  <div class="hero-actions anim-4">
+    <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg" id="hero-cta-signup">
+      🚀 Start for Free
+    </a>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-lg" id="hero-cta-login">
+      Sign In
+    </a>
+  </div>
+
+  <div class="hero-stats anim-5">
+    <div class="hero-stat">
+      <span class="hero-stat-val">AES-256</span>
+      <span class="hero-stat-label">Military-grade encryption</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-val">Polygon</span>
+      <span class="hero-stat-label">Blockchain verified</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-val">100%</span>
+      <span class="hero-stat-label">Free &amp; Open Source</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     FEATURES
+     ══════════════════════════════════════════════════════ -->
+<section class="section" style="position:relative;z-index:1;">
+  <div class="section-center">
+    <h2 class="section-title">
+      Enterprise-grade security,
+      <span class="gradient-text">built for everyone</span>
+    </h2>
+    <p class="section-sub">Every feature is designed with cybersecurity and trust at its core.</p>
+  </div>
+
+  <div class="feature-grid">
+
+    <div class="feature-card anim-1">
+      <div class="feature-icon">🔒</div>
+      <span class="badge badge-violet">Cybersecurity</span>
+      <h3 class="feature-title">AES-256 Encryption</h3>
+      <p class="feature-desc">
+        Every resume is encrypted before leaving your browser. Even if our servers
+        were breached, your data remains completely unreadable.
+      </p>
+    </div>
+
+    <div class="feature-card anim-2">
+      <div class="feature-icon">⛓️</div>
+      <span class="badge badge-cyan">Blockchain</span>
+      <h3 class="feature-title">Blockchain Verification</h3>
+      <p class="feature-desc">
+        A SHA-256 fingerprint of your resume is stored on the Polygon blockchain —
+        making tampering mathematically impossible to hide.
+      </p>
+    </div>
+
+    <div class="feature-card anim-3">
+      <div class="feature-icon">📂</div>
+      <span class="badge badge-green">Smart</span>
+      <h3 class="feature-title">Version Control</h3>
+      <p class="feature-desc">
+        Track every version of your resume like a Git repository. Recruiters
+        always see the latest, verified version with full history.
+      </p>
+    </div>
+
+    <div class="feature-card anim-4">
+      <div class="feature-icon">👁️</div>
+      <span class="badge badge-violet">Trust</span>
+      <h3 class="feature-title">Recruiter Verification</h3>
+      <p class="feature-desc">
+        Share a tamper-proof link. Recruiters can independently verify your
+        resume authenticity on the blockchain in one click.
+      </p>
+    </div>
+
+    <div class="feature-card anim-5">
+      <div class="feature-icon">⏱️</div>
+      <span class="badge badge-cyan">Security</span>
+      <h3 class="feature-title">Secure Share Links</h3>
+      <p class="feature-desc">
+        Generate time-expiring share links (15 min). No permanent public URLs —
+        your resume stays private and controlled.
+      </p>
+    </div>
+
+    <div class="feature-card anim-1">
+      <div class="feature-icon">🗂️</div>
+      <span class="badge badge-green">Compliance</span>
+      <h3 class="feature-title">Audit Trail</h3>
+      <p class="feature-desc">
+        Every upload, download, and verification is logged with timestamps and
+        IP addresses for full accountability and security.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     HOW IT WORKS
+     ══════════════════════════════════════════════════════ -->
+<section class="section" style="position:relative;z-index:1;">
+  <div class="section-center">
+    <h2 class="section-title">
+      How it <span class="gradient-text">works</span>
+    </h2>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card anim-1">
+      <div class="step-num">01</div>
+      <h3 class="step-title">Upload Resume</h3>
+      <p class="step-desc">Drop your PDF or DOCX — our system instantly scans for malware and encrypts it.</p>
+    </div>
+    <div class="step-card anim-2">
+      <div class="step-num">02</div>
+      <h3 class="step-title">Blockchain Stamp</h3>
+      <p class="step-desc">A SHA-256 hash is stored on the Polygon testnet. Immutable, timestamped, forever.</p>
+    </div>
+    <div class="step-card anim-3">
+      <div class="step-num">03</div>
+      <h3 class="step-title">Share &amp; Verify</h3>
+      <p class="step-desc">Give recruiters a link. They verify authenticity against the blockchain in one click.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     CTA BANNER
+     ══════════════════════════════════════════════════════ -->
+<section class="section" style="position:relative;z-index:1;">
+  <div class="cta-banner">
+    <div style="font-size:40px;margin-bottom:16px;">✅</div>
+    <h2>Ready to <span class="gradient-text">secure your resume?</span></h2>
+    <p>Join the future of professional credential verification.</p>
+    <div class="cta-actions">
+      <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg" id="cta-get-started">
+        Get Started Free →
+      </a>
+      <a href="https://github.com" target="_blank" rel="noopener" class="btn btn-outline btn-lg" id="cta-github">
+        ⭐ View on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════ -->
+<footer class="footer">
+  © 2025 ResumeVault — Built with ❤️ using Flask, PostgreSQL &amp; Polygon Blockchain
+</footer>
+
+{% endblock %}

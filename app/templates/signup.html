@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+
+  <div class="orb" style="width:420px;height:420px;top:0%;right:5%;background:rgba(124,58,237,0.07);"></div>
+
+  <div class="auth-box anim-1" style="max-width:460px;">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <a href="{{ url_for('main.index') }}" class="auth-logo-link">
+        <div class="brand-icon">🔐</div>
+        Resume<span class="gradient-text">Vault</span>
+      </a>
+      <h1 class="auth-title">Create your vault</h1>
+      <p class="auth-sub">Free forever — no credit card needed</p>
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+      <form method="POST" action="{{ url_for('auth.signup') }}" id="signup-form" novalidate>
+
+        <!-- Name -->
+        <div class="form-group">
+          <label for="signup-name" class="form-label">Full Name</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input
+              id="signup-name"
+              type="text"
+              name="name"
+              class="form-input"
+              placeholder="John Doe"
+              value="{{ name }}"
+              autocomplete="name"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="signup-email" class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input
+              id="signup-email"
+              type="email"
+              name="email"
+              class="form-input"
+              placeholder="you@example.com"
+              value="{{ email }}"
+              autocomplete="email"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              class="form-input"
+              placeholder="Min 8 chars, 1 uppercase, 1 number"
+              autocomplete="new-password"
+              required
+            />
+            <button type="button" class="eye-toggle" aria-label="Toggle password">👁</button>
+          </div>
+
+          <!-- Live strength indicator -->
+          <div class="pw-rules" id="pw-rules">
+            <div class="pw-rule" id="rule-len">
+              <div class="pw-dot"></div> At least 8 characters
+            </div>
+            <div class="pw-rule" id="rule-upper">
+              <div class="pw-dot"></div> One uppercase letter
+            </div>
+            <div class="pw-rule" id="rule-num">
+              <div class="pw-dot"></div> One number
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group" style="margin-bottom:28px;">
+          <label for="confirm" class="form-label">Confirm Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input
+              id="confirm"
+              type="password"
+              name="confirm"
+              class="form-input"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="signup-submit">
+          → Create Account
+        </button>
+      </form>
+
+      <div class="divider"></div>
+
+      <p class="auth-footer">
+        Already have an account?
+        <a href="{{ url_for('auth.login') }}" class="auth-link" id="goto-login">Sign in</a>
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

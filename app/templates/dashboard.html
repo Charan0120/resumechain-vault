@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+  <!-- ── Sidebar ──────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ user.name[0].upper() }}</div>
+      <div style="overflow:hidden;">
+        <div class="user-name">{{ user.name }}</div>
+        <div class="user-email">{{ user.email }}</div>
+      </div>
+    </div>
+
+    {% if user.is_verified %}
+      <div class="verified-chip" style="margin-bottom:16px;">✅ Verified account</div>
+    {% else %}
+      <div class="unverified-chip" style="margin-bottom:16px;">⚠️ Email not verified</div>
+    {% endif %}
+
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('main.dashboard') }}" class="nav-item active">📄 My Resumes</a>
+      <button class="nav-item" onclick="openUploadModal()">⬆️ Upload Resume</button>
+      <button class="nav-item" onclick="alert('Share links coming soon! 🔗')">🔗 Share Links</button>
+      <button class="nav-item" onclick="alert('Security settings coming soon! 🔒')">🔒 Security</button>
+      <button class="nav-item" onclick="alert('Profile settings coming soon! 👤')">👤 Profile</button>
+    </nav>
+
+    <a href="{{ url_for('auth.logout') }}" class="nav-item logout" id="sidebar-logout" style="margin-top:auto;">
+      🚪 Sign Out
+    </a>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────── -->
+  <main class="dashboard-main">
+
+    <!-- Header -->
+    <div class="dash-header anim-1">
+      <div class="dash-title">
+        <div class="brand-icon" style="width:36px;height:36px;font-size:18px;">🔐</div>
+        My Dashboard
+      </div>
+      <p class="dash-sub">
+        Welcome back, <span>{{ user.name.split()[0] }}</span>! Your vault is secure.
+      </p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid anim-2">
+      <div class="stat-card">
+        <div class="stat-icon">📄</div>
+        <div>
+          <div class="stat-val">{{ resumes|length }}</div>
+          <div class="stat-label">Resumes Stored</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">☁️</div>
+        <div>
+          <div class="stat-val">S3</div>
+          <div class="stat-label">Cloud Storage</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔒</div>
+        <div>
+          <div class="stat-val">AES-256</div>
+          <div class="stat-label">Encryption</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔑</div>
+        <div>
+          <div class="stat-val">SHA-256</div>
+          <div class="stat-label">File Hashing</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Resume List or Empty State ───────────────────── -->
+    {% if resumes %}
+
+      <div class="resume-list-header anim-3">
+        <h3 style="font-size:16px;font-weight:700;">Your Resumes</h3>
+        <button class="btn btn-primary btn-sm" onclick="openUploadModal()" id="add-resume-btn">
+          ⬆️ Upload New
+        </button>
+      </div>
+
+      <div class="resume-list anim-3">
+        {% for resume in resumes %}
+        <div class="resume-card" id="resume-{{ resume.id }}">
+
+          <!-- Icon + Info -->
+          <div class="resume-card-left">
+            <div class="resume-icon">
+              {% if resume.original_filename.endswith('.pdf') %}📕
+              {% else %}📘{% endif %}
+            </div>
+            <div class="resume-info">
+              <div class="resume-name">{{ resume.original_filename }}</div>
+              <div class="resume-meta">
+                <span class="badge badge-violet">v{{ resume.version }}</span>
+                <span>{{ resume.size_display() }}</span>
+                <span>{{ resume.uploaded_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+              </div>
+              <div class="resume-hash" title="{{ resume.file_hash }}">
+                🔑 SHA-256: {{ resume.file_hash[:16] }}…
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="resume-card-actions">
+            <a
+              href="{{ url_for('main.download_resume', resume_id=resume.id) }}"
+              class="btn btn-outline btn-sm"
+              id="download-{{ resume.id }}"
+              title="Download via 15-min secure link"
+            >
+              ⬇️ Download
+            </a>
+            <button
+              class="btn btn-outline btn-sm"
+              onclick="openShareModal('{{ resume.id }}', '{{ resume.original_filename }}')"
+              id="share-{{ resume.id }}"
+            >
+              🔗 Share
+            </button>
+            <form
+              method="POST"
+              action="{{ url_for('main.delete_resume_route', resume_id=resume.id) }}"
+              onsubmit="return confirm('Delete {{ resume.original_filename }}? This cannot be undone.');"
+              style="display:inline;"
+            >
+              <button type="submit" class="btn btn-danger btn-sm" id="delete-{{ resume.id }}">
+                🗑 Delete
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- Active share links for this resume -->
+        {% set active_links = resume.share_links | list %}
+        {% if active_links %}
+        <div class="share-links-row">
+          {% for link in active_links %}
+            {% if not link.is_expired() %}
+            <div class="share-link-chip">
+              <span>🔗</span>
+              <a
+                class="share-link-token"
+                id="link-{{ link.id }}"
+                href="{{ request.host_url }}share/{{ link.token }}"
+                target="_blank"
+                rel="noopener"
+              >{{ request.host_url }}share/{{ link.token[:16] }}…</a>
+              <button class="copy-btn" onclick="copyLink('{{ request.host_url }}share/{{ link.token }}', this)" title="Copy full link">📋</button>
+              <span class="share-link-expiry">{{ link.expiry_display() }}</span>
+              <form method="POST" action="{{ url_for('main.delete_share_link', link_id=link.id) }}" style="display:inline;">
+                <button type="submit" class="share-link-revoke" title="Revoke">✕</button>
+              </form>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state anim-3">
+      <div class="empty-icon">⬆️</div>
+      <h3 class="empty-title">No resumes yet</h3>
+      <p class="empty-sub">
+        Upload your first resume. It will be encrypted with AES-256 and stored
+        securely in AWS S3 — like GitHub for your career.
+      </p>
+      <button class="btn btn-primary btn-lg" id="dashboard-upload-btn" onclick="openUploadModal()">
+        ⬆️ Upload Resume
+      </button>
+      <p class="empty-note">Supports PDF &amp; DOCX · Max 10 MB · AES-256 encrypted · Stored in AWS S3</p>
+    </div>
+    {% endif %}
+
+    <!-- Roadmap Teaser -->
+    <div class="roadmap-card anim-4">
+      <div class="roadmap-title">🗺️ Coming Next — Phase 4 &amp; Beyond</div>
+      <div class="badge-row">
+        <span class="badge badge-cyan">SHA-256 Hashing ✅</span>
+        <span class="badge badge-violet">AES-256 Encryption ✅</span>
+        <span class="badge badge-violet">AWS S3 Storage ✅</span>
+        <span class="badge badge-green">Secure Share Links ✅</span>
+        <span class="badge badge-cyan">Docker Deployment</span>
+        <span class="badge badge-cyan">Live Public URL</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SHARE MODAL
+     ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="share-modal" onclick="closeShareOnOverlay(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Share Resume">
+
+    <div class="modal-header">
+      <h2 class="modal-title">🔗 Share Resume</h2>
+      <button class="modal-close" onclick="closeShareModal()">✕</button>
+    </div>
+
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">
+      Generate a secure, time-expiring link for <strong id="share-resume-name"></strong>.
+      Anyone with the link can download the resume — no account needed.
+    </p>
+
+    <form method="POST" id="share-form">
+
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="form-label">Link Expires After</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <label class="expiry-option">
+            <input type="radio" name="expiry" value="15m" /> 15 Minutes
+          </label>
+          <label class="expiry-option">
+            <input type="radio" name="expiry" value="1h" checked /> 1 Hour
+          </label>
+          <label class="expiry-option">
+            <input type="radio" name="expiry" value="24h" /> 24 Hours
+          </label>
+          <label class="expiry-option">
+            <input type="radio" name="expiry" value="7d" /> 7 Days
+          </label>
+        </div>
+      </div>
+
+      <div class="upload-security-note">
+        🔒 The link is single-use and expires automatically. You can also revoke
+        it anytime from the dashboard.
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeShareModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="share-submit-btn">
+          🔗 Generate Link
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     UPLOAD MODAL
+     ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="upload-modal" onclick="closeOnOverlay(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Upload Resume">
+
+    <div class="modal-header">
+      <h2 class="modal-title">⬆️ Upload Resume</h2>
+      <button class="modal-close" onclick="closeUploadModal()" aria-label="Close">✕</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.upload') }}" enctype="multipart/form-data" id="upload-form">
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="drop-icon">📂</div>
+        <div class="drop-text" id="drop-text">
+          <strong>Click to browse</strong> or drag &amp; drop your resume here
+        </div>
+        <div class="drop-sub">PDF or DOCX · Max 10 MB</div>
+        <input
+          type="file"
+          name="resume"
+          id="file-input"
+          accept=".pdf,.doc,.docx"
+          style="display:none;"
+          required
+        />
+      </div>
+
+      <!-- Selected file info -->
+      <div class="file-preview" id="file-preview" style="display:none;">
+        <span id="file-preview-icon">📕</span>
+        <div>
+          <div id="file-preview-name" style="font-weight:600;font-size:14px;"></div>
+          <div id="file-preview-size" style="font-size:12px;color:var(--text-muted);"></div>
+        </div>
+        <button type="button" onclick="clearFile()" class="modal-close" style="margin-left:auto;">✕</button>
+      </div>
+
+      <!-- Security info -->
+      <div class="upload-security-note">
+        🔒 Your file will be encrypted with <strong>AES-256</strong> and stored in
+        <strong>AWS S3</strong>. A <strong>SHA-256</strong> hash is computed for
+        integrity verification.
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeUploadModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="upload-submit-btn" disabled>
+          🔒 Encrypt &amp; Upload
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Modal ────────────────────────────────────────────────
+  function openUploadModal() {
+    document.getElementById('upload-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeUploadModal() {
+    document.getElementById('upload-modal').classList.remove('active');
+    document.body.style.overflow = '';
+    clearFile();
+  }
+  function closeOnOverlay(e) {
+    if (e.target.id === 'upload-modal') closeUploadModal();
+  }
+
+  // ── File input ───────────────────────────────────────────
+  const fileInput = document.getElementById('file-input');
+  const dropZone  = document.getElementById('drop-zone');
+
+  fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+  // Drag & drop
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      handleFile(file);
+    }
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const allowed = ['pdf', 'doc', 'docx'];
+    if (!allowed.includes(ext)) {
+      alert('Only PDF and DOCX files are allowed.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File must be under 10 MB.');
+      return;
+    }
+
+    const icon = ext === 'pdf' ? '📕' : '📘';
+    const sizeMB = (file.size / 1024).toFixed(1);
+    const sizeStr = file.size > 1024 * 1024
+      ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
+      : `${sizeMB} KB`;
+
+    document.getElementById('drop-text').innerHTML = '';
+    document.getElementById('file-preview').style.display = 'flex';
+    document.getElementById('file-preview-icon').textContent = icon;
+    document.getElementById('file-preview-name').textContent = file.name;
+    document.getElementById('file-preview-size').textContent = sizeStr;
+    document.getElementById('upload-submit-btn').disabled = false;
+  }
+
+  function clearFile() {
+    fileInput.value = '';
+    document.getElementById('file-preview').style.display = 'none';
+    document.getElementById('drop-text').innerHTML =
+      '<strong>Click to browse</strong> or drag &amp; drop your resume here';
+    document.getElementById('upload-submit-btn').disabled = true;
+  }
+
+  // Show loading state on submit
+  document.getElementById('upload-form').addEventListener('submit', () => {
+    const btn = document.getElementById('upload-submit-btn');
+    btn.textContent = '⏳ Uploading…';
+    btn.disabled = true;
+  });
+
+  // ── Share Modal ──────────────────────────────────────────
+  function openShareModal(resumeId, resumeName) {
+    document.getElementById('share-resume-name').textContent = resumeName;
+    document.getElementById('share-form').action = '/resume/' + resumeId + '/share';
+    document.getElementById('share-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeShareModal() {
+    document.getElementById('share-modal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function closeShareOnOverlay(e) {
+    if (e.target.id === 'share-modal') closeShareModal();
+  }
+
+  // ── Copy share link to clipboard ─────────────────────────
+  function copyLink(fullUrl, btn) {
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      btn.textContent = '✅';
+      setTimeout(() => btn.textContent = '📋', 1500);
+    }).catch(() => {
+      // Fallback: select the link text
+      alert('Link: ' + fullUrl);
+    });
+  }
+
+  // ── Auto-show copied share_url from flash redirect ───────
+  const urlParams = new URLSearchParams(window.location.search);
+  const shareUrl = urlParams.get('share_url');
+  if (shareUrl) {
+    navigator.clipboard.writeText(shareUrl).catch(() => {});
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+</script>
+{% endblock %}

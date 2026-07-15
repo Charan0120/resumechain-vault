@@ -1,0 +1,23 @@
+# Environment variables
+.env
+.env.*
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Database
+*.sqlite3
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo

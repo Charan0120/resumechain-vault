@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Link Expired{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-box anim-1" style="text-align:center;">
+    <div style="font-size:64px;margin-bottom:20px;">⏰</div>
+    <h1 class="auth-title" style="color:var(--red-light);">Link Expired</h1>
+    <p style="color:var(--text-muted);margin-top:12px;line-height:1.7;">
+      This resume share link has expired or has already been used.<br/>
+      Please ask the owner to generate a new share link.
+    </p>
+    <div style="margin-top:32px;">
+      <a href="{{ url_for('main.index') }}" class="btn btn-primary" id="expired-home-btn">
+        → Go to ResumeVault
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
