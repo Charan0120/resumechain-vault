@@ -71,8 +71,7 @@ def signup():
         _log("register", user.id)
 
         # Send verification email
-        base_url = os.getenv("BASE_URL", "http://localhost:5000")
-        verify_url = f"{base_url}/auth/verify-email/{token}"
+        verify_url = url_for("auth.verify_email", token=token, _external=True)
         html = f"""
         <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
                     background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
@@ -177,8 +176,7 @@ def resend_verification():
     current_user.verification_token = token
     db.session.commit()
 
-    base_url = os.getenv("BASE_URL", "http://localhost:5000")
-    verify_url = f"{base_url}/auth/verify-email/{token}"
+    verify_url = url_for("auth.verify_email", token=token, _external=True)
     html = f"""
     <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
                 background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
@@ -225,8 +223,8 @@ def forgot_password():
             user.reset_token = token
             db.session.commit()
 
-            base_url = os.getenv("BASE_URL", "http://localhost:5000")
-            reset_url = f"{base_url}/auth/reset-password/{token}"
+            # Send reset email
+            reset_url = url_for("auth.reset_password", token=token, _external=True)
             html = f"""
             <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
                         background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
