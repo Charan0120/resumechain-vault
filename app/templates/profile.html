@@ -63,6 +63,13 @@
               <span class="badge badge-green">✅ Email Verified</span>
             {% else %}
               <span class="badge badge-cyan" style="opacity:0.8;">⏳ Pending Verification</span>
+              <div style="margin-top:12px;">
+                <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+                  <button type="submit" class="btn btn-outline btn-sm" id="resend-verify-btn">
+                    📧 Resend Verification Email
+                  </button>
+                </form>
+              </div>
             {% endif %}
           </div>
           <div>

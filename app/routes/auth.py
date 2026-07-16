@@ -100,10 +100,10 @@ def signup():
             print(f"[EMAIL ERROR] Failed to send verification email to {email}: {e}")
             traceback.print_exc()
 
-        # Auto-login the new user and send them straight to the dashboard
+        # Auto-login the new user and redirect to landing page
         login_user(user)
         flash(f"Welcome to ResumeVault, {name.split()[0]}! 🎉 Check your email to verify your account.", "success")
-        return redirect(url_for("main.dashboard"))
+        return redirect(url_for("main.index"))
 
     return render_template("signup.html", name="", email="")
 
@@ -160,8 +160,56 @@ def verify_email(token):
     user.verification_token = None
     db.session.commit()
     _log("email_verified", user.id)
-    flash("Email verified! You can now sign in.", "success")
-    return redirect(url_for("auth.login"))
+    flash("✅ Email verified! Your account is now fully active.", "success")
+    return redirect(url_for("main.dashboard"))
+
+
+# ── RESEND VERIFICATION EMAIL ─────────────────────────────────
+
+@auth_bp.route("/resend-verification", methods=["POST"])
+@login_required
+def resend_verification():
+    if current_user.is_verified:
+        flash("Your email is already verified.", "info")
+        return redirect(url_for("main.profile"))
+
+    token = secrets.token_urlsafe(32)
+    current_user.verification_token = token
+    db.session.commit()
+
+    base_url = os.getenv("BASE_URL", "http://localhost:5000")
+    verify_url = f"{base_url}/auth/verify-email/{token}"
+    html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
+                background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
+      <h1 style="color:#7C3AED;text-align:center;margin-bottom:24px;">🔐 ResumeVault</h1>
+      <h2>Verify your email, {current_user.name.split()[0]}!</h2>
+      <p style="color:#9CA3AF;line-height:1.7;margin:16px 0;">
+        Click the button below to verify your email address and unlock full access.
+      </p>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="{verify_url}"
+           style="background:linear-gradient(135deg,#7C3AED,#06B6D4);color:white;
+                  padding:14px 32px;border-radius:8px;text-decoration:none;
+                  font-weight:600;font-size:16px;">
+          ✅ Verify Email Address
+        </a>
+      </div>
+      <p style="color:#6B7280;font-size:12px;text-align:center;">
+        Link expires in 24 hours. Ignore if you did not request this.
+      </p>
+    </div>"""
+
+    try:
+        _send_email(current_user.email, "Verify your ResumeVault email", html)
+        flash("✅ Verification email sent! Check your inbox.", "success")
+    except Exception as e:
+        import traceback
+        print(f"[EMAIL ERROR] Resend failed: {e}")
+        traceback.print_exc()
+        flash("⚠️ Could not send email. Check your email settings.", "error")
+
+    return redirect(url_for("main.profile"))
 
 
 # ── FORGOT PASSWORD ───────────────────────────────────────────

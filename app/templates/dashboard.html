@@ -256,10 +256,11 @@
     <form method="POST" action="{{ url_for('main.upload') }}" enctype="multipart/form-data" id="upload-form">
 
       <!-- Drop Zone -->
-      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="drop-zone" id="drop-zone">
         <div class="drop-icon">📂</div>
         <div class="drop-text" id="drop-text">
-          <strong>Click to browse</strong> or drag &amp; drop your resume here
+          <label for="file-input" style="cursor:pointer;"><strong>Click to browse</strong></label>
+          &nbsp;or drag &amp; drop your resume here
         </div>
         <div class="drop-sub">PDF or DOCX · Max 10 MB</div>
         <input
