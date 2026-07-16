@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Share Links{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
+      <div style="overflow:hidden;">
+        <div class="user-name">{{ current_user.name }}</div>
+        <div class="user-email">{{ current_user.email }}</div>
+      </div>
+    </div>
+
+    {% if current_user.is_verified %}
+      <div class="verified-chip" style="margin-bottom:16px;">✅ Verified account</div>
+    {% else %}
+      <div class="unverified-chip" style="margin-bottom:16px;">⚠️ Email not verified</div>
+    {% endif %}
+
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('main.dashboard') }}" class="nav-item">📄 My Resumes</a>
+      <a href="{{ url_for('main.share_links_page') }}" class="nav-item active">🔗 Share Links</a>
+      <a href="{{ url_for('main.profile') }}" class="nav-item">👤 Profile</a>
+    </nav>
+
+    <a href="{{ url_for('auth.logout') }}" class="nav-item logout" id="sidebar-logout" style="margin-top:auto;">
+      🚪 Sign Out
+    </a>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+
+    <div class="dash-header anim-1">
+      <div>
+        <h1 class="dash-title" style="font-size:22px;">🔗 Share Links</h1>
+        <p class="dash-sub">All share links you've generated. Revoke any you no longer need.</p>
+      </div>
+      {% set active_count = links | selectattr('is_expired') | reject | list | length %}
+      <span class="badge badge-violet">{{ links|length }} Total</span>
+    </div>
+
+    {% if links %}
+    <div class="glass-card anim-2" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 24px;border-bottom:1px solid var(--glass-border);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--text-muted);">Links are listed newest first. Expired links are shown greyed out.</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Resume</th>
+              <th>Link</th>
+              <th>Status</th>
+              <th>Downloads</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for link in links %}
+            <tr style="{% if link.is_expired() %}opacity:0.45;{% endif %}">
+              <td>
+                <span style="font-weight:500;color:var(--text-primary);font-size:13px;">
+                  {{ link.resume.original_filename }}
+                </span>
+              </td>
+              <td>
+                {% if not link.is_expired() %}
+                <a
+                  href="{{ request.host_url }}share/{{ link.token }}"
+                  target="_blank"
+                  class="share-link-token"
+                  style="max-width:200px;"
+                >{{ request.host_url }}share/{{ link.token[:12] }}…</a>
+                <button
+                  class="copy-btn"
+                  onclick="copyText('{{ request.host_url }}share/{{ link.token }}', this)"
+                  title="Copy"
+                >📋</button>
+                {% else %}
+                  <span style="color:var(--text-muted);font-size:12px;">— expired —</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if link.is_expired() %}
+                  <span class="badge badge-cyan" style="opacity:0.5;font-size:11px;">⏰ Expired</span>
+                {% else %}
+                  <span class="badge badge-green" style="font-size:11px;">✅ Active · {{ link.expiry_display() }}</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--violet-light);font-weight:600;text-align:center;">
+                {{ link.download_count }}
+              </td>
+              <td style="font-size:12px;color:var(--text-muted);">
+                {{ link.created_at.strftime('%b %d, %H:%M') }}
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('main.delete_share_link', link_id=link.id) }}"
+                      onsubmit="return confirm('Revoke this link?');">
+                  <button type="submit" class="btn btn-danger btn-sm" id="revoke-{{ link.id }}">
+                    ✕ Revoke
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="empty-state anim-2">
+      <div class="empty-icon">🔗</div>
+      <h3 class="empty-title">No share links yet</h3>
+      <p class="empty-sub">Go to your dashboard, click 🔗 Share on any resume to generate a secure link.</p>
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary" id="go-dashboard-btn">→ Go to Dashboard</a>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✅';
+      setTimeout(() => btn.textContent = '📋', 1500);
+    }).catch(() => alert('Link: ' + text));
+  }
+</script>
+{% endblock %}

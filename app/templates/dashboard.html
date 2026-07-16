@@ -24,9 +24,8 @@
     <nav class="sidebar-nav">
       <a href="{{ url_for('main.dashboard') }}" class="nav-item active">📄 My Resumes</a>
       <button class="nav-item" onclick="openUploadModal()">⬆️ Upload Resume</button>
-      <button class="nav-item" onclick="alert('Share links coming soon! 🔗')">🔗 Share Links</button>
-      <button class="nav-item" onclick="alert('Security settings coming soon! 🔒')">🔒 Security</button>
-      <button class="nav-item" onclick="alert('Profile settings coming soon! 👤')">👤 Profile</button>
+      <a href="{{ url_for('main.share_links_page') }}" class="nav-item">🔗 Share Links</a>
+      <a href="{{ url_for('main.profile') }}" class="nav-item">👤 Profile</a>
     </nav>
 
     <a href="{{ url_for('auth.logout') }}" class="nav-item logout" id="sidebar-logout" style="margin-top:auto;">

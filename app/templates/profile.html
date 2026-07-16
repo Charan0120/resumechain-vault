@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+  <!-- Sidebar (reused) -->
+  <aside class="sidebar">
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
+      <div style="overflow:hidden;">
+        <div class="user-name">{{ current_user.name }}</div>
+        <div class="user-email">{{ current_user.email }}</div>
+      </div>
+    </div>
+
+    {% if current_user.is_verified %}
+      <div class="verified-chip" style="margin-bottom:16px;">✅ Verified account</div>
+    {% else %}
+      <div class="unverified-chip" style="margin-bottom:16px;">⚠️ Email not verified</div>
+    {% endif %}
+
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('main.dashboard') }}" class="nav-item">📄 My Resumes</a>
+      <a href="{{ url_for('main.share_links_page') }}" class="nav-item">🔗 Share Links</a>
+      <a href="{{ url_for('main.profile') }}" class="nav-item active">👤 Profile</a>
+    </nav>
+
+    <a href="{{ url_for('auth.logout') }}" class="nav-item logout" id="sidebar-logout" style="margin-top:auto;">
+      🚪 Sign Out
+    </a>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+
+    <div class="dash-header anim-1">
+      <div>
+        <h1 class="dash-title" style="font-size:22px;">👤 Profile Settings</h1>
+        <p class="dash-sub">Manage your account information and security.</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;" class="anim-2">
+
+      <!-- Account Info Card -->
+      <div class="glass-card" style="padding:28px;">
+        <h2 style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:20px;">
+          🪪 Account Information
+        </h2>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px;">Full Name</div>
+            <div style="font-size:15px;color:var(--text-primary);font-weight:500;">{{ current_user.name }}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px;">Email Address</div>
+            <div style="font-size:15px;color:var(--text-primary);font-weight:500;">{{ current_user.email }}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px;">Account Status</div>
+            {% if current_user.is_verified %}
+              <span class="badge badge-green">✅ Email Verified</span>
+            {% else %}
+              <span class="badge badge-cyan" style="opacity:0.8;">⏳ Pending Verification</span>
+            {% endif %}
+          </div>
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px;">Member Since</div>
+            <div style="font-size:14px;color:var(--text-secondary);">{{ current_user.created_at.strftime('%B %d, %Y') }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Password Card -->
+      <div class="glass-card" style="padding:28px;">
+        <h2 style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:20px;">
+          🔒 Change Password
+        </h2>
+        <form method="POST" action="{{ url_for('main.profile') }}" id="change-password-form">
+          <div class="form-group">
+            <label class="form-label" for="current_password">Current Password</label>
+            <input
+              type="password"
+              class="form-input"
+              id="current_password"
+              name="current_password"
+              placeholder="Enter current password"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new_password">New Password</label>
+            <input
+              type="password"
+              class="form-input"
+              id="new_password"
+              name="new_password"
+              placeholder="Min 8 chars, 1 uppercase, 1 number"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm New Password</label>
+            <input
+              type="password"
+              class="form-input"
+              id="confirm_password"
+              name="confirm_password"
+              placeholder="Repeat new password"
+              required
+            />
+          </div>
+          <div class="upload-security-note" style="margin-bottom:20px;">
+            🔐 Password must be at least 8 characters and contain an uppercase letter and a number.
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="save-password-btn">
+            🔒 Update Password
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+{% endblock %}

@@ -204,7 +204,62 @@ def delete_share_link(link_id):
     db.session.delete(link)
     db.session.commit()
     flash("Share link revoked.", "info")
-    return redirect(url_for("main.dashboard"))
+    # Redirect back to wherever they came from (dashboard or share-links page)
+    return redirect(request.referrer or url_for("main.dashboard"))
+
+
+# ── Share Links Page ────────────────────────────────────────────
+
+@main_bp.route("/share-links")
+@login_required
+def share_links_page():
+    links = (
+        ShareLink.query
+        .filter_by(user_id=current_user.id)
+        .order_by(ShareLink.created_at.desc())
+        .all()
+    )
+    return render_template("share_links.html", links=links)
+
+
+# ── Profile Page ────────────────────────────────────────────────
+
+@main_bp.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    from app import bcrypt
+
+    if request.method == "POST":
+        current_pw  = request.form.get("current_password", "")
+        new_pw      = request.form.get("new_password", "")
+        confirm_pw  = request.form.get("confirm_password", "")
+
+        if not bcrypt.check_password_hash(current_user.password_hash, current_pw):
+            flash("Current password is incorrect.", "error")
+            return redirect(url_for("main.profile"))
+
+        errors = []
+        if len(new_pw) < 8:
+            errors.append("New password must be at least 8 characters.")
+        if not any(c.isupper() for c in new_pw):
+            errors.append("New password must contain at least one uppercase letter.")
+        if not any(c.isdigit() for c in new_pw):
+            errors.append("New password must contain at least one number.")
+        if new_pw != confirm_pw:
+            errors.append("New passwords do not match.")
+
+        if errors:
+            for e in errors:
+                flash(e, "error")
+            return redirect(url_for("main.profile"))
+
+        current_user.password_hash = bcrypt.generate_password_hash(new_pw).decode("utf-8")
+        db.session.commit()
+        _log("password_changed", current_user.id)
+        flash("Password changed successfully! 🔒", "success")
+        return redirect(url_for("main.profile"))
+
+    return render_template("profile.html")
 
 
 # ══════════════════════════════════════════════════════════════
@@ -231,7 +286,14 @@ def admin_required(f):
 @main_bp.route("/admin")
 @admin_required
 def admin_dashboard():
-    users = User.query.order_by(User.created_at.desc()).all()
+    admin_email = current_app.config.get("ADMIN_EMAIL", "")
+    # Exclude the admin account itself from the list
+    users = (
+        User.query
+        .filter(User.email != admin_email)
+        .order_by(User.created_at.desc())
+        .all()
+    )
 
     # Build stats per user
     user_stats = []

@@ -95,11 +95,15 @@ def signup():
         </div>"""
         try:
             _send_email(email, "Verify your ResumeVault email", html)
-        except Exception:
-            pass  # Email failure shouldn't block registration
+        except Exception as e:
+            import traceback
+            print(f"[EMAIL ERROR] Failed to send verification email to {email}: {e}")
+            traceback.print_exc()
 
-        flash("Account created! Check your email to verify your account.", "success")
-        return redirect(url_for("auth.login"))
+        # Auto-login the new user and send them straight to the dashboard
+        login_user(user)
+        flash(f"Welcome to ResumeVault, {name.split()[0]}! 🎉 Check your email to verify your account.", "success")
+        return redirect(url_for("main.dashboard"))
 
     return render_template("signup.html", name="", email="")
 
@@ -197,8 +201,10 @@ def forgot_password():
             </div>"""
             try:
                 _send_email(email, "Reset your ResumeVault password", html)
-            except Exception:
-                pass
+            except Exception as e:
+                import traceback
+                print(f"[EMAIL ERROR] Failed to send reset email to {email}: {e}")
+                traceback.print_exc()
 
         # Always show same message (prevent user enumeration)
         flash("If that email is registered, you'll receive a reset link shortly.", "success")
