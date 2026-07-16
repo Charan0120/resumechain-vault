@@ -108,24 +108,28 @@ def download_resume(resume_id):
     )
 
 
-# ── Delete Resume ──────────────────────────────────────────────
+# ── Delete Resume ────────────────────────────────────────────
 
 @main_bp.route("/resume/<resume_id>/delete", methods=["POST"])
 @login_required
 def delete_resume_route(resume_id):
     resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    filename = resume.original_filename  # save before session closes
 
     try:
         delete_resume(resume.s3_key)
     except ClientError:
-        flash("Could not delete from cloud. Please try again.", "error")
+        flash("Could not delete file from cloud. Please try again.", "error")
         return redirect(url_for("main.dashboard"))
 
+    # Delete share links first at ORM level to avoid FK constraint errors
+    from app.models import ShareLink
+    ShareLink.query.filter_by(resume_id=resume.id).delete()
     db.session.delete(resume)
     db.session.commit()
 
     _log("resume_delete", current_user.id)
-    flash(f'"{resume.original_filename}" deleted successfully.', "info")
+    flash(f'"{filename}" deleted successfully.', "info")
     return redirect(url_for("main.dashboard"))
 
 
@@ -202,3 +206,73 @@ def delete_share_link(link_id):
     flash("Share link revoked.", "info")
     return redirect(url_for("main.dashboard"))
 
+
+# ══════════════════════════════════════════════════════════════
+# ADMIN PANEL
+# ══════════════════════════════════════════════════════════════
+
+import functools
+from flask import current_app
+from app.models import User
+
+
+def admin_required(f):
+    """Decorator: only allows the ADMIN_EMAIL user through."""
+    @functools.wraps(f)
+    @login_required
+    def decorated(*args, **kwargs):
+        admin_email = current_app.config.get("ADMIN_EMAIL", "")
+        if not admin_email or current_user.email != admin_email:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated
+
+
+@main_bp.route("/admin")
+@admin_required
+def admin_dashboard():
+    users = User.query.order_by(User.created_at.desc()).all()
+
+    # Build stats per user
+    user_stats = []
+    for user in users:
+        resume_count = Resume.query.filter_by(user_id=user.id).count()
+        last_action = (
+            AuditLog.query
+            .filter_by(user_id=user.id)
+            .order_by(AuditLog.timestamp.desc())
+            .first()
+        )
+        user_stats.append({
+            "user": user,
+            "resume_count": resume_count,
+            "last_action": last_action,
+        })
+
+    return render_template("admin_dashboard.html", user_stats=user_stats)
+
+
+@main_bp.route("/admin/delete/<user_id>", methods=["POST"])
+@admin_required
+def admin_delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+
+    # Delete all S3 files first
+    resumes = Resume.query.filter_by(user_id=user.id).all()
+    for resume in resumes:
+        try:
+            delete_resume(resume.s3_key)
+        except ClientError:
+            pass  # Log but don't block deletion
+
+    # Cascade delete: share links → resumes → audit logs → user
+    ShareLink.query.filter(
+        ShareLink.resume_id.in_([r.id for r in resumes])
+    ).delete(synchronize_session=False)
+    Resume.query.filter_by(user_id=user.id).delete()
+    AuditLog.query.filter_by(user_id=user.id).delete()
+    db.session.delete(user)
+    db.session.commit()
+
+    flash(f"User {user.email} and all their data has been permanently deleted.", "info")
+    return redirect(url_for("main.admin_dashboard"))

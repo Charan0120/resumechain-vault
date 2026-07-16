@@ -27,6 +27,7 @@ def create_app():
         
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["ADMIN_EMAIL"] = os.getenv("ADMIN_EMAIL", "")
 
     # Mail
     app.config["MAIL_SERVER"] = "smtp.gmail.com"

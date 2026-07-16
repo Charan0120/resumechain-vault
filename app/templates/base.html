@@ -28,6 +28,9 @@
         <span style="font-size:13px;color:var(--text-muted);">
           Hi, <span style="color:var(--text-secondary);font-weight:500;">{{ current_user.name.split()[0] }}</span>
         </span>
+        {% if current_user.email == config.get('ADMIN_EMAIL') %}
+          <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-outline btn-sm" style="border-color:rgba(245,158,11,0.5);color:#f59e0b;">🛡️ Admin</a>
+        {% endif %}
         <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline btn-sm">📊 Dashboard</a>
         <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Sign Out</a>
       {% else %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+
+  <!-- Header -->
+  <header class="dash-header anim-1">
+    <div>
+      <h1 class="dash-title">🛡️ Admin Panel</h1>
+      <p class="dash-sub">Manage all users, their files, and platform activity.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="badge badge-violet">{{ user_stats|length }} Users</span>
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline btn-sm">← My Dashboard</a>
+    </div>
+  </header>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar anim-2" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+    <div class="stat-card">
+      <div class="stat-value">{{ user_stats|length }}</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ user_stats|sum(attribute='resume_count') }}</div>
+      <div class="stat-label">Total Resumes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ user_stats|selectattr('user.is_verified')|list|length }}</div>
+      <div class="stat-label">Verified Accounts</div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="glass-card anim-3" style="padding:0;overflow:hidden;">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--glass-border);">
+      <h2 style="font-size:16px;font-weight:600;color:var(--text-primary);margin:0;">All Users</h2>
+    </div>
+
+    {% if user_stats %}
+    <div style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Resumes</th>
+            <th>Joined</th>
+            <th>Last Activity</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stat in user_stats %}
+          <tr>
+            <td>
+              <span style="font-weight:500;color:var(--text-primary);">{{ stat.user.name }}</span>
+            </td>
+            <td>
+              <span style="color:var(--text-secondary);font-size:13px;">{{ stat.user.email }}</span>
+            </td>
+            <td>
+              {% if stat.user.is_verified %}
+                <span class="badge badge-green" style="font-size:11px;">✅ Verified</span>
+              {% else %}
+                <span class="badge badge-cyan" style="font-size:11px;opacity:0.7;">⏳ Unverified</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-weight:600;color:var(--violet-light);">{{ stat.resume_count }}</span>
+            </td>
+            <td style="font-size:12px;color:var(--text-muted);">
+              {{ stat.user.created_at.strftime('%b %d, %Y') }}
+            </td>
+            <td style="font-size:12px;color:var(--text-muted);">
+              {% if stat.last_action %}
+                {{ stat.last_action.action.replace('_', ' ').title() }}<br/>
+                <span style="font-size:11px;opacity:0.6;">{{ stat.last_action.timestamp.strftime('%b %d, %H:%M') }}</span>
+              {% else %}
+                <span style="opacity:0.4;">No activity</span>
+              {% endif %}
+            </td>
+            <td>
+              <form
+                method="POST"
+                action="{{ url_for('main.admin_delete_user', user_id=stat.user.id) }}"
+                onsubmit="return confirm('⚠️ Permanently delete {{ stat.user.email }} and ALL their files? This cannot be undone.');"
+              >
+                <button type="submit" class="btn btn-danger btn-sm" id="admin-delete-{{ stat.user.id }}">
+                  🗑 Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:60px 20px;">
+      <div class="empty-icon">👥</div>
+      <h3 class="empty-title">No users yet</h3>
+      <p class="empty-sub">Users will appear here once they sign up.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
