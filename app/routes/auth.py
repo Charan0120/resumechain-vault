@@ -152,13 +152,17 @@ def logout():
 def verify_email(token):
     user = User.query.filter_by(verification_token=token).first()
     if not user:
-        flash("Invalid or expired verification link.", "error")
+        flash("Invalid or expired verification link. If you resent the email, please make sure you are clicking the link in the most recent email.", "error")
         return redirect(url_for("auth.login"))
 
     user.is_verified = True
     user.verification_token = None
     db.session.commit()
     _log("email_verified", user.id)
+    
+    # Auto-login the user on the browser/device where they clicked the link
+    login_user(user)
+    
     flash("✅ Email verified! Your account is now fully active.", "success")
     return redirect(url_for("main.dashboard"))
 
