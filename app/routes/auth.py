@@ -172,44 +172,54 @@ def verify_email(token):
 @auth_bp.route("/resend-verification", methods=["POST"])
 @login_required
 def resend_verification():
-    if current_user.is_verified:
+    # Load a real SQLAlchemy instance (not the Flask-Login proxy)
+    user = User.query.get(current_user.id)
+
+    if not user:
+        flash("User not found. Please sign in again.", "error")
+        return redirect(url_for("auth.login"))
+
+    if user.is_verified:
         flash("Your email is already verified.", "info")
         return redirect(url_for("main.profile"))
 
-    token = secrets.token_urlsafe(32)
-    current_user.verification_token = token
-    db.session.commit()
-
-    verify_url = url_for("auth.verify_email", token=token, _external=True)
-    html = f"""
-    <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
-                background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
-      <h1 style="color:#7C3AED;text-align:center;margin-bottom:24px;">🔐 ResumeVault</h1>
-      <h2>Verify your email, {current_user.name.split()[0]}!</h2>
-      <p style="color:#9CA3AF;line-height:1.7;margin:16px 0;">
-        Click the button below to verify your email address and unlock full access.
-      </p>
-      <div style="text-align:center;margin:32px 0;">
-        <a href="{verify_url}"
-           style="background:linear-gradient(135deg,#7C3AED,#06B6D4);color:white;
-                  padding:14px 32px;border-radius:8px;text-decoration:none;
-                  font-weight:600;font-size:16px;">
-          ✅ Verify Email Address
-        </a>
-      </div>
-      <p style="color:#6B7280;font-size:12px;text-align:center;">
-        Link expires in 24 hours. Ignore if you did not request this.
-      </p>
-    </div>"""
-
     try:
-        _send_email(current_user.email, "Verify your ResumeVault email", html)
-        flash("✅ Verification email sent! Check your inbox.", "success")
+        token = secrets.token_urlsafe(32)
+        user.verification_token = token
+        db.session.commit()
+
+        first_name = (user.name or "there").split()[0]
+        verify_url = url_for("auth.verify_email", token=token, _external=True)
+        html = f"""
+        <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
+                    background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
+          <h1 style="color:#7C3AED;text-align:center;margin-bottom:24px;">&#128272; ResumeVault</h1>
+          <h2>Verify your email, {first_name}!</h2>
+          <p style="color:#9CA3AF;line-height:1.7;margin:16px 0;">
+            Click the button below to verify your email address and unlock full access.
+          </p>
+          <div style="text-align:center;margin:32px 0;">
+            <a href="{verify_url}"
+               style="background:linear-gradient(135deg,#7C3AED,#06B6D4);color:white;
+                      padding:14px 32px;border-radius:8px;text-decoration:none;
+                      font-weight:600;font-size:16px;">
+              Verify Email Address
+            </a>
+          </div>
+          <p style="color:#6B7280;font-size:12px;text-align:center;">
+            This link is valid for 24 hours. Ignore if you did not request this.
+          </p>
+        </div>"""
+
+        _send_email(user.email, "Verify your ResumeVault email", html)
+        flash("✅ Verification email sent! Check your inbox (and spam folder).", "success")
+
     except Exception as e:
         import traceback
-        print(f"[EMAIL ERROR] Resend failed: {e}")
+        db.session.rollback()
+        print(f"[RESEND VERIFY ERROR] {e}")
         traceback.print_exc()
-        flash("⚠️ Could not send email. Check your email settings.", "error")
+        flash("⚠️ Could not send verification email. Please check your email settings in Render.", "error")
 
     return redirect(url_for("main.profile"))
 
