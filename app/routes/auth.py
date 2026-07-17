@@ -18,9 +18,21 @@ def _log(action, user_id=None):
     db.session.commit()
 
 
+import requests
+
 def _send_email(to, subject, html_body):
-    msg = Message(subject, recipients=[to], html=html_body)
-    mail.send(msg)
+    webhook_url = os.getenv("EMAIL_WEBHOOK_URL")
+    if webhook_url:
+        payload = {
+            "to": to,
+            "subject": subject,
+            "html": html_body
+        }
+        response = requests.post(webhook_url, json=payload, timeout=10)
+        response.raise_for_status()
+    else:
+        msg = Message(subject, recipients=[to], html=html_body)
+        mail.send(msg)
 
 
 # ── REGISTER ─────────────────────────────────────────────────
