@@ -31,6 +31,11 @@ def index():
 @main_bp.route("/dashboard")
 @login_required
 def dashboard():
+    # Block unverified users
+    if not current_user.is_verified:
+        flash("Please verify your email first to access your dashboard.", "info")
+        return redirect(url_for("auth.check_email"))
+
     resumes = (
         Resume.query
         .filter_by(user_id=current_user.id)

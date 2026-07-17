@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Check Your Email{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+
+  <div class="orb" style="width:420px;height:420px;top:5%;left:5%;background:rgba(124,58,237,0.07);"></div>
+  <div class="orb" style="width:300px;height:300px;bottom:5%;right:5%;background:rgba(6,182,212,0.05);"></div>
+
+  <div class="auth-box anim-1">
+
+    <div class="auth-logo">
+      <a href="{{ url_for('main.index') }}" class="auth-logo-link">
+        <div class="brand-icon">🔐</div>
+        Resume<span class="gradient-text">Vault</span>
+      </a>
+    </div>
+
+    <div class="card" style="text-align:center;padding:40px 32px;">
+
+      <!-- Animated email icon -->
+      <div style="font-size:64px;margin-bottom:16px;animation:float 3s ease-in-out infinite;">📧</div>
+
+      <h1 class="auth-title" style="margin-bottom:8px;">Check Your Email</h1>
+      <p class="auth-sub" style="margin-bottom:24px;">
+        We sent a verification link to
+        {% if email %}
+          <br/><strong style="color:var(--text-primary);">{{ email }}</strong>
+        {% else %}
+          your email address
+        {% endif %}
+      </p>
+
+      <!-- Steps -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:20px;text-align:left;margin-bottom:24px;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:var(--text-secondary);">
+            <span style="background:rgba(124,58,237,0.2);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--violet-light);flex-shrink:0;">1</span>
+            Open the email from <strong>ResumeVault</strong>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:var(--text-secondary);">
+            <span style="background:rgba(124,58,237,0.2);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--violet-light);flex-shrink:0;">2</span>
+            Click <strong>"Verify Email Address"</strong>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:var(--text-secondary);">
+            <span style="background:rgba(124,58,237,0.2);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--violet-light);flex-shrink:0;">3</span>
+            You'll be automatically logged in and taken to your vault ✅
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">
+        ⚠️ Check your <strong>Spam / Junk folder</strong> if you don't see it within a minute.
+      </p>
+
+      <!-- Resend button -->
+      <form method="POST" action="{{ url_for('auth.resend_verification') }}" style="margin-bottom:16px;">
+        <button type="submit" class="btn btn-outline btn-block" id="resend-email-btn">
+          🔄 Resend Verification Email
+        </button>
+      </form>
+
+      <div class="divider"></div>
+
+      <p class="auth-footer">
+        Wrong account?
+        <a href="{{ url_for('auth.signup') }}" class="auth-link" id="start-over-link">Start over</a>
+        &nbsp;·&nbsp;
+        <a href="{{ url_for('auth.login') }}" class="auth-link" id="signin-instead-link">Sign in instead</a>
+      </p>
+
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+<style>
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+</style>
+{% endblock %}
+{% endblock %}

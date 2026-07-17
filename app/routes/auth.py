@@ -1,6 +1,6 @@
 import secrets
 import os
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_mail import Message
 from app import db, bcrypt, mail
@@ -58,7 +58,7 @@ def signup():
                 flash(e, "error")
             return render_template("signup.html", name=name, email=email)
 
-        # Create user
+        # Create user (NOT verified yet)
         token = secrets.token_urlsafe(32)
         user = User(
             name=name,
@@ -70,15 +70,29 @@ def signup():
         db.session.commit()
         _log("register", user.id)
 
+        # Store user id in session so check_email page can resend without login
+        session["pending_user_id"] = user.id
+
         # Send verification email
+        _send_verification_email(user, token)
+
+        return redirect(url_for("auth.check_email"))
+
+    return render_template("signup.html", name="", email="")
+
+
+def _send_verification_email(user, token):
+    """Helper: sends the verification email. Swallows errors gracefully."""
+    try:
         verify_url = url_for("auth.verify_email", token=token, _external=True)
+        first_name = (user.name or "there").split()[0]
         html = f"""
         <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
                     background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
-          <h1 style="color:#7C3AED;text-align:center;margin-bottom:24px;">🔐 ResumeVault</h1>
-          <h2>Hi {name}, welcome!</h2>
+          <h1 style="color:#7C3AED;text-align:center;margin-bottom:24px;">&#128272; ResumeVault</h1>
+          <h2>Hi {first_name}, welcome!</h2>
           <p style="color:#9CA3AF;line-height:1.7;margin:16px 0;">
-            Please verify your email to activate your account.
+            Click the button below to verify your email and access your vault.
           </p>
           <div style="text-align:center;margin:32px 0;">
             <a href="{verify_url}"
@@ -92,19 +106,32 @@ def signup():
             Link expires in 24 hours. Ignore if you did not create an account.
           </p>
         </div>"""
-        try:
-            _send_email(email, "Verify your ResumeVault email", html)
-        except Exception as e:
-            import traceback
-            print(f"[EMAIL ERROR] Failed to send verification email to {email}: {e}")
-            traceback.print_exc()
+        _send_email(user.email, "Verify your ResumeVault email", html)
+        return True
+    except Exception as e:
+        import traceback
+        print(f"[EMAIL ERROR] Failed to send to {user.email}: {e}")
+        traceback.print_exc()
+        return False
 
-        # Auto-login the new user and redirect to landing page
-        login_user(user)
-        flash(f"Welcome to ResumeVault, {name.split()[0]}! 🎉 Check your email to verify your account.", "success")
-        return redirect(url_for("main.index"))
 
-    return render_template("signup.html", name="", email="")
+# ── CHECK EMAIL PAGE (shown after signup) ──────────────────────
+
+@auth_bp.route("/check-email")
+def check_email():
+    """Page shown after signup asking user to verify their email."""
+    if current_user.is_authenticated and current_user.is_verified:
+        return redirect(url_for("main.dashboard"))
+    user_id = session.get("pending_user_id")
+    email = None
+    if user_id:
+        user = db.session.get(User, user_id)
+        if user:
+            email = user.email
+    elif current_user.is_authenticated:
+        email = current_user.email
+    return render_template("check_email.html", email=email)
+
 
 
 # ── LOGIN ─────────────────────────────────────────────────────
@@ -152,76 +179,65 @@ def logout():
 def verify_email(token):
     user = User.query.filter_by(verification_token=token).first()
     if not user:
-        flash("Invalid or expired verification link. If you resent the email, please make sure you are clicking the link in the most recent email.", "error")
+        flash("Invalid or expired verification link. Please request a new one.", "error")
         return redirect(url_for("auth.login"))
 
     user.is_verified = True
     user.verification_token = None
     db.session.commit()
     _log("email_verified", user.id)
-    
-    # Auto-login the user on the browser/device where they clicked the link
+
+    # Clear the pending session and auto-login the user
+    session.pop("pending_user_id", None)
     login_user(user)
-    
-    flash("✅ Email verified! Your account is now fully active.", "success")
+
+    flash("✅ Email verified! Welcome to your vault.", "success")
     return redirect(url_for("main.dashboard"))
 
 
 # ── RESEND VERIFICATION EMAIL ─────────────────────────────────
 
 @auth_bp.route("/resend-verification", methods=["POST"])
-@login_required
 def resend_verification():
-    # Load a real SQLAlchemy instance (not the Flask-Login proxy)
-    user = User.query.get(current_user.id)
+    """Works for both: pre-login (check_email page) and logged-in (profile page)."""
+    # Get the user — either from active session (new signup) or login (profile page)
+    user = None
+    if current_user.is_authenticated:
+        user = db.session.get(User, current_user.id)
+    else:
+        user_id = session.get("pending_user_id")
+        if user_id:
+            user = db.session.get(User, user_id)
 
     if not user:
-        flash("User not found. Please sign in again.", "error")
+        flash("Session expired. Please sign in or sign up again.", "error")
         return redirect(url_for("auth.login"))
 
     if user.is_verified:
         flash("Your email is already verified.", "info")
-        return redirect(url_for("main.profile"))
+        redirect_to = url_for("main.profile") if current_user.is_authenticated else url_for("main.dashboard")
+        return redirect(redirect_to)
 
     try:
         token = secrets.token_urlsafe(32)
         user.verification_token = token
         db.session.commit()
-
-        first_name = (user.name or "there").split()[0]
-        verify_url = url_for("auth.verify_email", token=token, _external=True)
-        html = f"""
-        <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;
-                    background:#0D1117;color:#E5E7EB;padding:40px;border-radius:12px;">
-          <h1 style="color:#7C3AED;text-align:center;margin-bottom:24px;">&#128272; ResumeVault</h1>
-          <h2>Verify your email, {first_name}!</h2>
-          <p style="color:#9CA3AF;line-height:1.7;margin:16px 0;">
-            Click the button below to verify your email address and unlock full access.
-          </p>
-          <div style="text-align:center;margin:32px 0;">
-            <a href="{verify_url}"
-               style="background:linear-gradient(135deg,#7C3AED,#06B6D4);color:white;
-                      padding:14px 32px;border-radius:8px;text-decoration:none;
-                      font-weight:600;font-size:16px;">
-              Verify Email Address
-            </a>
-          </div>
-          <p style="color:#6B7280;font-size:12px;text-align:center;">
-            This link is valid for 24 hours. Ignore if you did not request this.
-          </p>
-        </div>"""
-
-        _send_email(user.email, "Verify your ResumeVault email", html)
-        flash("✅ Verification email sent! Check your inbox (and spam folder).", "success")
-
+        sent = _send_verification_email(user, token)
+        if sent:
+            flash("✅ Verification email sent! Check your inbox and spam folder.", "success")
+        else:
+            flash("⚠️ Could not send email. Please check your MAIL settings on Render.", "error")
     except Exception as e:
         import traceback
         db.session.rollback()
-        print(f"[RESEND VERIFY ERROR] {e}")
+        print(f"[RESEND ERROR] {e}")
         traceback.print_exc()
-        flash("⚠️ Could not send verification email. Please check your email settings in Render.", "error")
+        flash("⚠️ Something went wrong. Please try again.", "error")
 
-    return redirect(url_for("main.profile"))
+    # Redirect back to where they came from
+    if current_user.is_authenticated:
+        return redirect(url_for("main.profile"))
+    return redirect(url_for("auth.check_email"))
 
 
 # ── FORGOT PASSWORD ───────────────────────────────────────────
