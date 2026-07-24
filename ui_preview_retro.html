@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeVault — Retro UI Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --yellow:   #FFE033;
+      --pink:     #FF2D78;
+      --green:    #00D46A;
+      --orange:   #FF6B00;
+      --blue:     #00BFFF;
+      --purple:   #8B5CF6;
+      --cream:    #FFFBF0;
+      --black:    #111111;
+      --border:   3px solid #111;
+      --border-thick: 4px solid #111;
+      --radius:   14px;
+      --shadow:   5px 5px 0px #111;
+      --shadow-lg: 7px 7px 0px #111;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--yellow);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    h1,h2,h3,h4 { font-family: 'Fredoka One', cursive; letter-spacing: 0.5px; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--yellow); }
+    ::-webkit-scrollbar-thumb { background: var(--black); border-radius: 5px; }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--black);
+      border-bottom: var(--border-thick);
+      padding: 14px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .navbar-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--yellow);
+      text-decoration: none;
+    }
+    .brand-badge {
+      background: var(--pink); color: white;
+      border: 2px solid var(--yellow); border-radius: 8px;
+      padding: 2px 10px; font-size: 13px; font-weight: 900;
+    }
+    .navbar-nav { display: flex; align-items: center; gap: 12px; }
+    .nav-btn {
+      padding: 8px 20px; border-radius: var(--radius);
+      font-weight: 800; font-size: 14px; cursor: pointer;
+      border: var(--border-thick); font-family: 'Nunito', sans-serif;
+      transition: transform 0.1s, box-shadow 0.1s; text-decoration: none;
+    }
+    .nav-btn:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow); }
+    .nav-btn:active { transform: translate(2px,2px); box-shadow: none; }
+    .nav-btn-outline { background: transparent; color: #fff; border-color: #fff; }
+    .nav-btn-outline:hover { background: rgba(255,255,255,0.1); }
+    .nav-btn-primary { background: var(--yellow); color: var(--black); }
+
+    /* ── PAGE SECTIONS ── */
+    section { display: none; padding-top: 70px; min-height: 100vh; }
+    section.active { display: block; }
+
+    /* ══════════════════════════════════════════════════════
+       LANDING PAGE
+    ══════════════════════════════════════════════════════ */
+    .landing-hero {
+      background: var(--yellow);
+      min-height: calc(100vh - 70px);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 40px;
+    }
+
+    /* Decorative blobs */
+    .blob {
+      position: absolute; border-radius: 50%;
+      border: var(--border-thick); z-index: 0;
+    }
+    .blob-1 { width: 200px; height: 200px; background: var(--pink); top: 5%; left: -60px; }
+    .blob-2 { width: 150px; height: 150px; background: var(--blue); bottom: 10%; right: -40px; }
+    .blob-3 { width: 100px; height: 100px; background: var(--green); top: 20%; right: 10%; }
+    .blob-4 { width: 80px; height: 80px; background: var(--orange); bottom: 20%; left: 8%; }
+
+    /* Wavy stripes on sides */
+    .stripe-left, .stripe-right {
+      position: absolute; top: 0; bottom: 0; width: 80px;
+      display: flex; flex-direction: column; overflow: hidden; z-index: 0;
+    }
+    .stripe-left { left: 0; }
+    .stripe-right { right: 0; }
+    .stripe-bar { flex: 1; }
+
+    .hero-content {
+      position: relative; z-index: 1;
+      text-align: center; max-width: 700px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--black); color: var(--yellow);
+      border: var(--border); border-radius: 999px;
+      padding: 6px 20px; font-size: 13px; font-weight: 800;
+      margin-bottom: 20px; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: clamp(52px, 9vw, 96px);
+      line-height: 1; color: var(--black);
+      -webkit-text-stroke: 2px var(--black);
+      margin-bottom: 16px;
+    }
+    .hero-title span { color: var(--pink); }
+    .hero-subtitle {
+      font-size: 20px; font-weight: 700; color: var(--black);
+      margin-bottom: 36px; max-width: 500px; margin-left: auto; margin-right: auto;
+      line-height: 1.5;
+    }
+    .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    .btn {
+      padding: 14px 32px; border-radius: var(--radius);
+      font-size: 16px; font-weight: 900; cursor: pointer;
+      border: var(--border-thick); transition: transform 0.1s, box-shadow 0.1s;
+      text-decoration: none; display: inline-block; font-family: 'Nunito', sans-serif;
+    }
+    .btn:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
+    .btn:active { transform: translate(2px,2px); box-shadow: none; }
+    .btn-primary { background: var(--black); color: var(--yellow); }
+    .btn-pink { background: var(--pink); color: white; }
+    .btn-green { background: var(--green); color: var(--black); }
+    .btn-orange { background: var(--orange); color: white; }
+    .btn-blue { background: var(--blue); color: var(--black); }
+    .btn-outline { background: white; color: var(--black); }
+    .btn-sm { padding: 8px 18px; font-size: 13px; }
+    .btn-block { width: 100%; text-align: center; }
+
+    /* Features section */
+    .features {
+      background: var(--cream);
+      border-top: var(--border-thick);
+      padding: 80px 40px;
+    }
+    .section-label {
+      font-size: 13px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--pink); margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(32px, 5vw, 52px); color: var(--black); margin-bottom: 48px;
+    }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px; max-width: 1100px; margin: 0 auto;
+    }
+    .feature-card {
+      background: white; border: var(--border-thick); border-radius: var(--radius);
+      padding: 28px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover { transform: translate(-4px,-4px); box-shadow: var(--shadow-lg); }
+    .feature-icon {
+      width: 56px; height: 56px; border-radius: 12px;
+      border: var(--border-thick); display: flex; align-items: center;
+      justify-content: center; font-size: 28px; margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 20px; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: #444; line-height: 1.6; }
+
+    /* Stats */
+    .stats-section {
+      background: var(--black); border-top: var(--border-thick);
+      padding: 60px 40px; text-align: center;
+    }
+    .stats-grid {
+      display: flex; gap: 40px; justify-content: center;
+      flex-wrap: wrap; max-width: 800px; margin: 0 auto;
+    }
+    .stat-item { }
+    .stat-number {
+      font-family: 'Fredoka One', cursive; font-size: 56px;
+      line-height: 1; margin-bottom: 4px;
+    }
+    .stat-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.6); }
+
+    /* ══════════════════════════════════════════════════════
+       DASHBOARD
+    ══════════════════════════════════════════════════════ */
+    .dashboard-layout {
+      display: grid; grid-template-columns: 260px 1fr;
+      min-height: calc(100vh - 70px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--black); border-right: var(--border-thick);
+      padding: 28px 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .sidebar-user {
+      background: var(--yellow); border: var(--border-thick); border-radius: var(--radius);
+      padding: 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+    }
+    .user-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--pink); border: var(--border-thick);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fredoka One', cursive; font-size: 20px; color: white; flex-shrink: 0;
+    }
+    .user-name { font-weight: 900; font-size: 14px; color: var(--black); }
+    .user-email { font-size: 11px; color: #555; }
+
+    .verified-chip {
+      background: var(--green); border: var(--border); border-radius: 999px;
+      padding: 4px 12px; font-size: 11px; font-weight: 800;
+      display: inline-block; margin-bottom: 8px;
+    }
+    .nav-item-side {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; border-radius: var(--radius);
+      border: 2px solid transparent; color: rgba(255,255,255,0.7);
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: all 0.15s; text-decoration: none;
+    }
+    .nav-item-side:hover, .nav-item-side.active {
+      background: var(--yellow); color: var(--black);
+      border-color: var(--black); box-shadow: 3px 3px 0 var(--yellow);
+    }
+    .nav-item-side.active { font-weight: 900; }
+    .logout-btn {
+      margin-top: auto; background: rgba(255,45,120,0.15);
+      border-color: var(--pink) !important; color: var(--pink) !important;
+    }
+    .logout-btn:hover { background: var(--pink) !important; color: white !important; }
+
+    /* Main dashboard content */
+    .dash-main {
+      background: var(--cream); padding: 32px;
+      overflow-y: auto;
+    }
+    .dash-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+    }
+    .dash-title {
+      font-size: 38px; color: var(--black); line-height: 1;
+    }
+    .dash-sub { font-size: 15px; color: #555; margin-top: 4px; font-weight: 600; }
+
+    /* Stats cards */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px;
+    }
+    .dash-stat {
+      background: white; border: var(--border-thick); border-radius: var(--radius);
+      padding: 20px; box-shadow: var(--shadow); transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .dash-stat:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
+    .dash-stat-icon {
+      width: 40px; height: 40px; border-radius: 10px; border: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin-bottom: 12px;
+    }
+    .dash-stat-value { font-family: 'Fredoka One', cursive; font-size: 32px; line-height: 1; }
+    .dash-stat-label { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Upload zone */
+    .upload-zone {
+      background: white; border: 3px dashed var(--black); border-radius: var(--radius);
+      padding: 36px; text-align: center; margin-bottom: 28px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .upload-zone:hover {
+      background: var(--yellow); transform: translate(-2px,-2px); box-shadow: var(--shadow);
+    }
+    .upload-zone-icon { font-size: 48px; margin-bottom: 12px; }
+    .upload-zone h3 { font-size: 20px; margin-bottom: 6px; }
+    .upload-zone p { font-size: 13px; color: #666; font-weight: 600; }
+
+    /* Resume cards grid */
+    .resume-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px; margin-top: 8px;
+    }
+    .resume-card {
+      background: white; border: var(--border-thick); border-radius: var(--radius);
+      overflow: hidden; box-shadow: var(--shadow); transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .resume-card:hover { transform: translate(-4px,-4px); box-shadow: var(--shadow-lg); }
+    .resume-card-top {
+      padding: 20px; display: flex; align-items: center; gap: 14px;
+      border-bottom: var(--border);
+    }
+    .resume-icon {
+      width: 48px; height: 48px; border-radius: 10px; border: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .resume-name { font-weight: 900; font-size: 14px; line-height: 1.3; }
+    .resume-meta { font-size: 11px; color: #777; font-weight: 600; margin-top: 2px; }
+    .resume-card-actions {
+      display: flex; border-top: var(--border);
+    }
+    .card-action-btn {
+      flex: 1; padding: 11px; border: none; background: transparent;
+      font-weight: 800; font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: background 0.15s; border-right: var(--border); font-family: 'Nunito', sans-serif;
+    }
+    .card-action-btn:last-child { border-right: none; }
+    .card-action-btn:hover { background: var(--yellow); }
+    .card-action-btn.danger:hover { background: var(--pink); color: white; }
+
+    /* Tags */
+    .tag {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 800; border: 2px solid var(--black);
+      margin-right: 4px;
+    }
+    .tag-green { background: var(--green); }
+    .tag-blue { background: var(--blue); }
+    .tag-pink { background: var(--pink); color: white; }
+    .tag-orange { background: var(--orange); color: white; }
+
+    /* ══════════════════════════════════════════════════════
+       AUTH PAGES
+    ══════════════════════════════════════════════════════ */
+    .auth-wrapper {
+      min-height: calc(100vh - 70px);
+      background: var(--yellow);
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 20px; position: relative; overflow: hidden;
+    }
+    .auth-blob1 {
+      position: absolute; width: 300px; height: 300px;
+      background: var(--pink); border: var(--border-thick); border-radius: 50%;
+      top: -80px; left: -80px; z-index: 0;
+    }
+    .auth-blob2 {
+      position: absolute; width: 200px; height: 200px;
+      background: var(--blue); border: var(--border-thick); border-radius: 50%;
+      bottom: -60px; right: -60px; z-index: 0;
+    }
+    .auth-card {
+      background: white; border: var(--border-thick); border-radius: 20px;
+      padding: 40px; width: 100%; max-width: 440px;
+      box-shadow: var(--shadow-lg); position: relative; z-index: 1;
+    }
+    .auth-logo-box {
+      text-align: center; margin-bottom: 28px;
+    }
+    .auth-logo-box h1 {
+      font-size: 32px; color: var(--black); margin-bottom: 6px;
+    }
+    .auth-logo-box p { font-size: 14px; color: #666; font-weight: 600; }
+    .auth-icon {
+      width: 64px; height: 64px; background: var(--black); border-radius: 16px;
+      border: var(--border-thick); display: flex; align-items: center;
+      justify-content: center; font-size: 32px; margin: 0 auto 16px;
+    }
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-weight: 800; font-size: 13px; margin-bottom: 6px; }
+    .form-input {
+      width: 100%; padding: 12px 16px; border: var(--border-thick); border-radius: var(--radius);
+      font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 600;
+      background: var(--cream); outline: none; transition: box-shadow 0.15s;
+    }
+    .form-input:focus { box-shadow: 4px 4px 0 var(--black); }
+    .auth-footer-text {
+      text-align: center; margin-top: 20px; font-size: 14px; font-weight: 700; color: #555;
+    }
+    .auth-link { color: var(--pink); font-weight: 900; text-decoration: none; }
+    .auth-link:hover { text-decoration: underline; }
+
+    /* ── Section switcher (preview nav) ── */
+    .preview-switcher {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 999; display: flex; gap: 8px;
+      background: var(--black); border: var(--border-thick); border-radius: 999px;
+      padding: 8px 16px;
+    }
+    .switch-btn {
+      padding: 7px 18px; border-radius: 999px; border: 2px solid transparent;
+      font-weight: 800; font-size: 13px; cursor: pointer;
+      background: transparent; color: white; font-family: 'Nunito', sans-serif;
+      transition: all 0.15s;
+    }
+    .switch-btn.active, .switch-btn:hover {
+      background: var(--yellow); color: var(--black); border-color: var(--yellow);
+    }
+
+    /* ── Animations ── */
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .float { animation: float 3s ease-in-out infinite; }
+
+    /* ── Section title bar ── */
+    .section-bar {
+      background: var(--black); border-bottom: var(--border-thick);
+      padding: 10px 40px; display: flex; align-items: center; gap: 12px;
+    }
+    .section-bar-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    /* ── Footer ── */
+    .landing-footer {
+      background: var(--black); border-top: var(--border-thick);
+      padding: 40px; text-align: center; color: rgba(255,255,255,0.6);
+      font-size: 14px; font-weight: 600;
+    }
+    .landing-footer span { color: var(--yellow); }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar-brand" href="#">
+      🔐 ResumeVault
+    </a>
+    <div class="navbar-nav">
+      <a class="nav-btn nav-btn-outline" href="#" onclick="showSection('login')">Sign In</a>
+      <a class="nav-btn nav-btn-primary" href="#" onclick="showSection('signup')">Get Started →</a>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════════
+       LANDING PAGE
+  ════════════════════════════════════ -->
+  <section id="landing" class="active">
+
+    <!-- Hero -->
+    <div class="landing-hero">
+      <!-- Wavy side stripes -->
+      <div class="stripe-left">
+        <div class="stripe-bar" style="background:var(--pink)"></div>
+        <div class="stripe-bar" style="background:var(--orange)"></div>
+        <div class="stripe-bar" style="background:var(--green)"></div>
+        <div class="stripe-bar" style="background:var(--blue)"></div>
+        <div class="stripe-bar" style="background:var(--purple)"></div>
+        <div class="stripe-bar" style="background:var(--pink)"></div>
+        <div class="stripe-bar" style="background:var(--orange)"></div>
+      </div>
+      <div class="stripe-right">
+        <div class="stripe-bar" style="background:var(--blue)"></div>
+        <div class="stripe-bar" style="background:var(--green)"></div>
+        <div class="stripe-bar" style="background:var(--pink)"></div>
+        <div class="stripe-bar" style="background:var(--orange)"></div>
+        <div class="stripe-bar" style="background:var(--purple)"></div>
+        <div class="stripe-bar" style="background:var(--blue)"></div>
+        <div class="stripe-bar" style="background:var(--green)"></div>
+      </div>
+
+      <!-- Blobs -->
+      <div class="blob blob-1 float"></div>
+      <div class="blob blob-2 float" style="animation-delay:1s"></div>
+      <div class="blob blob-3 float" style="animation-delay:0.5s"></div>
+      <div class="blob blob-4 float" style="animation-delay:1.5s"></div>
+
+      <div class="hero-content">
+        <div class="hero-badge">🔐 AES-256 Encrypted · AWS S3 Storage</div>
+        <h1 class="hero-title">Resume<span>Vault</span></h1>
+        <p class="hero-subtitle">The boldest, most secure place to store, encrypt, and share your resume with the world.</p>
+        <div class="hero-buttons">
+          <a href="#" class="btn btn-primary" onclick="showSection('signup')">🚀 Get Started Free</a>
+          <a href="#" class="btn btn-pink" onclick="showSection('dashboard')">👀 See Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+      <div style="max-width:1100px;margin:0 auto;">
+        <div class="section-label">💥 What's Inside</div>
+        <h2 class="section-title">Everything your resume needs.</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--yellow);">🔒</div>
+            <h3>AES-256 Encryption</h3>
+            <p>Your resume is encrypted with military-grade AES-256 before it even hits our servers. Nobody snoops on your file.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--pink);">☁️</div>
+            <h3>AWS S3 Storage</h3>
+            <p>Files are stored in enterprise-grade Amazon S3 cloud storage. Redundant, reliable, and lightning fast.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--green);">🔗</div>
+            <h3>Secure Share Links</h3>
+            <p>Generate time-expiring share links (15m → 7 days). Send your resume to recruiters without exposing your vault.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--blue);">🛡️</div>
+            <h3>SHA-256 Hashing</h3>
+            <p>Every file gets a SHA-256 fingerprint so you can always verify your resume has never been tampered with.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--orange);">📊</div>
+            <h3>Admin Dashboard</h3>
+            <p>Full platform admin control. View all users, their uploads, activity logs, and delete accounts in one click.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--purple);">📧</div>
+            <h3>Email Verification</h3>
+            <p>Secure signup with automated email verification powered by Make.com cloud automation workflows.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-number" style="color:var(--yellow)">256</div>
+          <div class="stat-label">Bit Encryption</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" style="color:var(--pink)">100%</div>
+          <div class="stat-label">Cloud Hosted</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" style="color:var(--green)">0ms</div>
+          <div class="stat-label">Data Exposed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="landing-footer">
+      Built with ❤️ by <span>Charan</span> · ResumeVault &copy; 2026
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       DASHBOARD
+  ════════════════════════════════════ -->
+  <section id="dashboard">
+    <div class="dashboard-layout">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-user">
+          <div class="user-avatar">C</div>
+          <div>
+            <div class="user-name">Charan Balu</div>
+            <div class="user-email">charan@gmail.com</div>
+          </div>
+        </div>
+
+        <span class="verified-chip">✅ Verified account</span>
+
+        <a class="nav-item-side active" href="#">📄 My Resumes</a>
+        <a class="nav-item-side" href="#" onclick="showSection('signup')">⬆️ Upload Resume</a>
+        <a class="nav-item-side" href="#">🔗 Share Links</a>
+        <a class="nav-item-side" href="#">👤 Profile</a>
+        <a class="nav-item-side logout-btn" href="#" onclick="showSection('login')" style="margin-top:auto;">🚪 Sign Out</a>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="dash-main">
+
+        <!-- Header -->
+        <div class="dash-header">
+          <div>
+            <h1 class="dash-title">My Vault 🗃️</h1>
+            <p class="dash-sub">Welcome back, Charan! Your documents are safe and sound.</p>
+          </div>
+          <button class="btn btn-primary" onclick="showSection('signup')">⬆️ Upload Resume</button>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <div class="dash-stat">
+            <div class="dash-stat-icon" style="background:var(--yellow);">📄</div>
+            <div class="dash-stat-value">3</div>
+            <div class="dash-stat-label">Total Resumes</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-icon" style="background:var(--green);">🔗</div>
+            <div class="dash-stat-value">7</div>
+            <div class="dash-stat-label">Share Links</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-icon" style="background:var(--pink);">👁️</div>
+            <div class="dash-stat-value">24</div>
+            <div class="dash-stat-label">Total Downloads</div>
+          </div>
+        </div>
+
+        <!-- Upload Zone -->
+        <div class="upload-zone">
+          <div class="upload-zone-icon">📂</div>
+          <h3>Drop your resume here</h3>
+          <p>PDF or DOCX · Max 10 MB · AES-256 encrypted on upload</p>
+        </div>
+
+        <!-- Resume Cards -->
+        <h2 style="font-size:24px;margin-bottom:16px;">Your Files</h2>
+        <div class="resume-grid">
+
+          <div class="resume-card">
+            <div class="resume-card-top">
+              <div class="resume-icon" style="background:var(--pink);">📕</div>
+              <div>
+                <div class="resume-name">Charan_Resume_2026.pdf</div>
+                <div class="resume-meta">2.4 MB · Jun 12, 2026</div>
+                <div style="margin-top:6px;">
+                  <span class="tag tag-green">PDF</span>
+                  <span class="tag tag-blue">Encrypted</span>
+                </div>
+              </div>
+            </div>
+            <div class="resume-card-actions">
+              <button class="card-action-btn">⬇️ Download</button>
+              <button class="card-action-btn">🔗 Share</button>
+              <button class="card-action-btn danger">🗑️</button>
+            </div>
+          </div>
+
+          <div class="resume-card">
+            <div class="resume-card-top">
+              <div class="resume-icon" style="background:var(--blue);">📘</div>
+              <div>
+                <div class="resume-name">Portfolio_2025.docx</div>
+                <div class="resume-meta">1.1 MB · Mar 5, 2026</div>
+                <div style="margin-top:6px;">
+                  <span class="tag tag-orange">DOCX</span>
+                  <span class="tag tag-blue">Encrypted</span>
+                </div>
+              </div>
+            </div>
+            <div class="resume-card-actions">
+              <button class="card-action-btn">⬇️ Download</button>
+              <button class="card-action-btn">🔗 Share</button>
+              <button class="card-action-btn danger">🗑️</button>
+            </div>
+          </div>
+
+          <div class="resume-card">
+            <div class="resume-card-top">
+              <div class="resume-icon" style="background:var(--green);">📗</div>
+              <div>
+                <div class="resume-name">Cover_Letter_Google.pdf</div>
+                <div class="resume-meta">890 KB · Jul 1, 2026</div>
+                <div style="margin-top:6px;">
+                  <span class="tag tag-green">PDF</span>
+                  <span class="tag tag-blue">Encrypted</span>
+                </div>
+              </div>
+            </div>
+            <div class="resume-card-actions">
+              <button class="card-action-btn">⬇️ Download</button>
+              <button class="card-action-btn">🔗 Share</button>
+              <button class="card-action-btn danger">🗑️</button>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       LOGIN
+  ════════════════════════════════════ -->
+  <section id="login">
+    <div class="auth-wrapper">
+      <div class="auth-blob1"></div>
+      <div class="auth-blob2"></div>
+      <div class="auth-card">
+        <div class="auth-logo-box">
+          <div class="auth-icon">🔐</div>
+          <h1>Welcome Back!</h1>
+          <p>Sign in to access your secure vault</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" placeholder="••••••••" />
+        </div>
+        <button class="btn btn-primary btn-block" onclick="showSection('dashboard')" style="margin-top:8px;">→ Sign In</button>
+        <p class="auth-footer-text">
+          No account? <a class="auth-link" href="#" onclick="showSection('signup')">Create one free</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SIGNUP
+  ════════════════════════════════════ -->
+  <section id="signup">
+    <div class="auth-wrapper">
+      <div class="auth-blob1" style="background:var(--green)"></div>
+      <div class="auth-blob2" style="background:var(--orange)"></div>
+      <div class="auth-card">
+        <div class="auth-logo-box">
+          <div class="auth-icon" style="background:var(--pink);">🚀</div>
+          <h1>Join ResumeVault</h1>
+          <p>Secure your resume in seconds</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" placeholder="Charan Balu" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" placeholder="Min 8 chars, 1 uppercase, 1 number" />
+        </div>
+        <button class="btn btn-pink btn-block" onclick="showSection('dashboard')" style="margin-top:8px;">🎉 Create Account</button>
+        <p class="auth-footer-text">
+          Already have an account? <a class="auth-link" href="#" onclick="showSection('login')">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Preview Switcher -->
+  <div class="preview-switcher">
+    <button class="switch-btn active" onclick="showSection('landing',this)">🏠 Landing</button>
+    <button class="switch-btn" onclick="showSection('dashboard',this)">📊 Dashboard</button>
+    <button class="switch-btn" onclick="showSection('login',this)">🔑 Login</button>
+    <button class="switch-btn" onclick="showSection('signup',this)">🚀 Signup</button>
+  </div>
+
+  <script>
+    function showSection(id, btn) {
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (btn) {
+        document.querySelectorAll('.switch-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

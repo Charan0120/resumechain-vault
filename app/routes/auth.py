@@ -1,5 +1,6 @@
 import secrets
 import os
+import requests
 from flask import Blueprint, render_template, redirect, url_for, request, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_mail import Message
@@ -17,8 +18,6 @@ def _log(action, user_id=None):
     db.session.add(AuditLog(action=action, user_id=user_id, ip_address=_get_ip()))
     db.session.commit()
 
-
-import requests
 
 def _send_email(to, subject, html_body):
     webhook_url = os.getenv("EMAIL_WEBHOOK_URL")
