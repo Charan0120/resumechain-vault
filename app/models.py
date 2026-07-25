@@ -60,13 +60,14 @@ class ShareLink(db.Model):
     resume = db.relationship("Resume", backref="share_links")
 
     def is_expired(self):
-        return datetime.now(timezone.utc) > self.expires_at.replace(tzinfo=timezone.utc)
+        # expires_at is stored as naive UTC in Postgres; compare with utcnow()
+        return datetime.utcnow() > self.expires_at
 
     def expiry_display(self):
         """Human-readable time remaining."""
         from datetime import timedelta
-        now = datetime.now(timezone.utc)
-        exp = self.expires_at.replace(tzinfo=timezone.utc)
+        now = datetime.utcnow()
+        exp = self.expires_at
         if now > exp:
             return "Expired"
         diff = exp - now
@@ -89,7 +90,7 @@ class AuditLog(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     action = db.Column(db.String(100), nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.utcnow())
 
 
 @login_manager.user_loader

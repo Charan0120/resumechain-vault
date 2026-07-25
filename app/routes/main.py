@@ -154,7 +154,7 @@ def create_share_link(resume_id):
 
     expiry_key = request.form.get("expiry", "1h")
     delta = EXPIRY_OPTIONS.get(expiry_key, timedelta(hours=1))
-    expires_at = datetime.now(timezone.utc) + delta
+    expires_at = datetime.utcnow() + delta
 
     token = secrets.token_urlsafe(32)
     link = ShareLink(
