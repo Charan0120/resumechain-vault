@@ -202,7 +202,7 @@ def verify_email(token):
     session.pop("pending_user_id", None)
     login_user(user)
 
-    flash("✅ Email verified! Welcome to your vault.", "success")
+    flash(" Email verified! Welcome to your vault.", "success")
     return redirect(url_for("main.dashboard"))
 
 

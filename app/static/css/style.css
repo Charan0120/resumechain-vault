@@ -698,24 +698,137 @@ h1,h2,h3,h4,h5 { font-family: var(--font-head); letter-spacing: 0.3px; color: va
 .roadmap-title { font-family: var(--font-head); font-size: 18px; color: var(--yellow); margin-bottom: 12px; }
 
 /* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — Tablet (≤768px)
 ═══════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .navbar { padding: 12px 20px; }
-  .dashboard-layout { grid-template-columns: 1fr; }
+
+  /* ── Navbar ── */
+  .navbar { padding: 10px 18px; height: 56px; }
+  .navbar-brand { font-size: 20px; }
+  .brand-icon { width: 30px; height: 30px; font-size: 15px; }
+  .navbar-nav .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 90px 24px 50px;
+    min-height: auto;
+  }
+  .hero-title { font-size: clamp(32px, 8vw, 52px); line-height: 1.15; }
+  .hero-subtitle { font-size: 15px; }
+  .hero-actions { flex-direction: column; align-items: center; gap: 10px; }
+  .hero-actions .btn { width: 100%; max-width: 320px; }
+  .hero-stats { gap: 24px; }
+  .hero-stat-val { font-size: 22px; }
+  .hero-badge { font-size: 11px; padding: 4px 14px; }
+
+  /* ── Landing sections ── */
+  .section { padding: 50px 20px; }
+  .section-center { margin-bottom: 32px; }
+  .section-title { font-size: clamp(24px, 6vw, 36px); }
+  .feature-grid { grid-template-columns: 1fr; gap: 16px; }
+  .steps-grid  { grid-template-columns: 1fr; gap: 16px; }
+  .cta-banner  { padding: 40px 24px; border-radius: 14px; }
+  .cta-banner h2 { font-size: 24px; }
+  .cta-actions .btn { width: 100%; max-width: 320px; }
+
+  /* ── Dashboard layout ── */
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    padding-top: 56px;
+  }
+
+  /* ── Sidebar → horizontal bottom strip ── */
   .sidebar {
-    position: relative; top: 0; height: auto;
-    flex-direction: row; flex-wrap: wrap; gap: 8px;
-    padding: 12px;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    top: auto; height: auto; z-index: 100;
+    flex-direction: row; flex-wrap: nowrap;
+    overflow-x: auto; gap: 4px;
+    padding: 8px 12px;
+    border-right: none; border-top: var(--border);
+    justify-content: space-around;
   }
   .sidebar-user { display: none; }
-  .dashboard-main, .dashboard-wrapper { padding: 20px; }
-  .stats-grid { grid-template-columns: repeat(2,1fr); }
-  .hero-title { font-size: 48px; }
-  .hero { padding: 100px 20px 60px; }
+  .sidebar-section-label { display: none; }
+  .sidebar-link {
+    flex-direction: column; gap: 2px;
+    padding: 6px 10px; font-size: 10px;
+    border-radius: 10px; white-space: nowrap;
+    min-width: 56px; text-align: center;
+  }
+  .sidebar-link .link-icon { font-size: 18px; }
+
+  /* ── Dashboard main content ── */
+  .dashboard-main, .dashboard-wrapper {
+    padding: 18px 16px;
+    /* leave room for fixed bottom sidebar */
+    padding-bottom: 80px;
+  }
+  .stats-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
+  .stat-card  { padding: 14px; gap: 10px; }
+  .stat-icon  { width: 36px; height: 36px; font-size: 17px; }
+  .stat-value { font-size: 24px; }
+
+  /* ── Resume list header ── */
+  .resume-list-header {
+    flex-direction: column; gap: 10px; align-items: flex-start;
+  }
+  .resume-list-header .btn { width: 100%; }
+
+  /* ── Resume cards ── */
+  .resume-card { margin-bottom: 12px; }
+  .resume-card-left { padding: 16px; gap: 12px; }
+  .resume-icon { width: 40px; height: 40px; font-size: 20px; }
+  .resume-name { font-size: 13px; }
+  .resume-hash { font-size: 10px; }
+  .resume-card-actions .btn { padding: 10px 6px; font-size: 12px; }
+
+  /* ── Auth cards ── */
+  .card { padding: 28px 20px; }
+
+  /* ── Modal ── */
+  .modal { max-width: 96vw; margin: 10px; border-radius: 14px; }
+  .modal-footer { flex-direction: column; gap: 8px; }
+  .modal-footer .btn { width: 100%; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — Phone (≤480px)
+═══════════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr; }
-  .card { padding: 24px 20px; }
-  .navbar-brand { font-size: 20px; }
+
+  /* ── Navbar ── */
+  .navbar-brand { font-size: 18px; gap: 7px; }
+  .navbar-nav .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  /* ── Hero ── */
+  .hero { padding: 80px 16px 44px; }
+  .hero-title { font-size: clamp(28px, 9vw, 42px); }
+  .hero-stats  { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .hero-badge  { font-size: 10px; }
+
+  /* ── Sections ── */
+  .section { padding: 40px 14px; }
+  .feature-card { padding: 20px; }
+  .step-card    { padding: 20px; }
+  .step-num     { font-size: 32px; }
+  .cta-banner   { padding: 30px 16px; }
+
+  /* ── Stats grid ── */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card  { padding: 12px; }
+  .stat-value { font-size: 22px; }
+  .stat-label { font-size: 10px; }
+
+  /* ── Resume cards ── */
+  .resume-card-left { padding: 14px; gap: 10px; }
+  .resume-card-actions .btn { padding: 9px 4px; font-size: 11px; }
+
+  /* ── Auth ── */
+  .card { padding: 22px 14px; }
+  .btn-lg { padding: 12px 20px; font-size: 15px; }
+
+  /* ── Sidebar items ── */
+  .sidebar-link { padding: 5px 8px; font-size: 9px; min-width: 48px; }
+  .sidebar-link .link-icon { font-size: 16px; }
 }
+
