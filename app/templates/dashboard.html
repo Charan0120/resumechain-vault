@@ -15,11 +15,7 @@
       </div>
     </div>
 
-    {% if user.is_verified %}
-      <div class="verified-chip" style="margin-bottom:16px;">✅ Verified account</div>
-    {% else %}
-      <div class="unverified-chip" style="margin-bottom:16px;">⚠️ Email not verified</div>
-    {% endif %}
+
 
     <nav class="sidebar-nav">
       <a href="{{ url_for('main.dashboard') }}" class="nav-item active">📄 My Resumes</a>
@@ -35,6 +31,13 @@
 
   <!-- ── Main Content ─────────────────────────────────────── -->
   <main class="dashboard-main">
+
+    <!-- Mobile-only: Upload button at top -->
+    <div class="mobile-upload-bar">
+      <button class="btn btn-primary" onclick="openUploadModal()" id="mobile-upload-btn">
+        ⬆️ Upload Resume
+      </button>
+    </div>
 
     <!-- Header -->
     <div class="dash-header anim-1">
@@ -255,12 +258,13 @@
 
     <form method="POST" action="{{ url_for('main.upload') }}" enctype="multipart/form-data" id="upload-form">
 
-      <!-- Drop Zone -->
-      <div class="drop-zone" id="drop-zone">
+      <!-- Drop Zone: clicking anywhere opens file picker -->
+      <div class="drop-zone" id="drop-zone" role="button" tabindex="0"
+           onclick="document.getElementById('file-input').click()"
+           onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('file-input').click()">
         <div class="drop-icon">📂</div>
         <div class="drop-text" id="drop-text">
-          <label for="file-input" style="cursor:pointer;"><strong>Click to browse</strong></label>
-          &nbsp;or drag &amp; drop your resume here
+          <strong>Click anywhere here</strong> or drag &amp; drop your resume
         </div>
         <div class="drop-sub">PDF or DOCX · Max 10 MB</div>
         <input
@@ -323,21 +327,31 @@
   const fileInput = document.getElementById('file-input');
   const dropZone  = document.getElementById('drop-zone');
 
+  // Prevent drop-zone click from double-triggering when clicking input
+  fileInput.addEventListener('click', e => e.stopPropagation());
   fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
 
   // Drag & drop
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+  dropZone.addEventListener('dragenter', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragging'); });
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragging'); });
+  dropZone.addEventListener('dragleave', e => { e.stopPropagation(); dropZone.classList.remove('dragging'); });
   dropZone.addEventListener('drop', e => {
     e.preventDefault();
+    e.stopPropagation();
     dropZone.classList.remove('dragging');
-    const file = e.dataTransfer.files[0];
-    if (file) {
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    // Assign dropped file to the hidden input using DataTransfer
+    try {
       const dt = new DataTransfer();
       dt.items.add(file);
       fileInput.files = dt.files;
-      handleFile(file);
+    } catch(err) {
+      // DataTransfer not supported — store file reference manually
+      fileInput._droppedFile = file;
     }
+    handleFile(file);
   });
 
   function handleFile(file) {
@@ -355,11 +369,11 @@
     }
 
     const icon = ext === 'pdf' ? '📕' : '📘';
-    const sizeMB = (file.size / 1024).toFixed(1);
     const sizeStr = file.size > 1024 * 1024
       ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
-      : `${sizeMB} KB`;
+      : `${(file.size / 1024).toFixed(1)} KB`;
 
+    document.getElementById('drop-zone').style.pointerEvents = 'none';
     document.getElementById('drop-text').innerHTML = '';
     document.getElementById('file-preview').style.display = 'flex';
     document.getElementById('file-preview-icon').textContent = icon;
@@ -370,18 +384,31 @@
 
   function clearFile() {
     fileInput.value = '';
+    fileInput._droppedFile = null;
+    document.getElementById('drop-zone').style.pointerEvents = '';
     document.getElementById('file-preview').style.display = 'none';
-    document.getElementById('drop-text').innerHTML =
-      '<strong>Click to browse</strong> or drag &amp; drop your resume here';
+    document.getElementById('drop-text').innerHTML = '<strong>Click anywhere here</strong> or drag &amp; drop your resume';
     document.getElementById('upload-submit-btn').disabled = true;
   }
 
-  // Show loading state on submit
-  document.getElementById('upload-form').addEventListener('submit', () => {
+  // If DataTransfer wasn't supported, inject dropped file into FormData on submit
+  document.getElementById('upload-form').addEventListener('submit', function(e) {
     const btn = document.getElementById('upload-submit-btn');
+    if (fileInput._droppedFile && fileInput.files.length === 0) {
+      e.preventDefault();
+      const fd = new FormData(this);
+      fd.set('resume', fileInput._droppedFile, fileInput._droppedFile.name);
+      btn.textContent = '⏳ Uploading…';
+      btn.disabled = true;
+      fetch(this.action, { method: 'POST', body: fd })
+        .then(r => { window.location.href = r.url; })
+        .catch(() => { btn.textContent = '🔒 Encrypt & Upload'; btn.disabled = false; });
+      return;
+    }
     btn.textContent = '⏳ Uploading…';
     btn.disabled = true;
   });
+
 
   // ── Share Modal ──────────────────────────────────────────
   function openShareModal(resumeId, resumeName) {

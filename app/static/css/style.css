@@ -468,6 +468,10 @@ h1,h2,h3,h4,h5 { font-family: var(--font-head); letter-spacing: 0.3px; color: va
   overflow-y: auto; height: 100%;
 }
 
+/* Mobile-only upload bar — hidden on desktop */
+.mobile-upload-bar { display: none; }
+
+
 /* ── Resume list header (Your Resumes row) ── */
 .resume-list-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -631,6 +635,8 @@ h1,h2,h3,h4,h5 { font-family: var(--font-head); letter-spacing: 0.3px; color: va
 .drop-zone:hover, .drop-zone.dragging {
   background: var(--yellow); transform: translate(-2px,-2px); box-shadow: var(--shadow);
 }
+.drop-zone:focus { outline: 3px solid var(--pink); outline-offset: 2px; }
+.drop-zone[style*='pointer-events: none'] { cursor: default; opacity: 0.85; }
 .drop-icon { font-size: 44px; margin-bottom: 10px; }
 .drop-text { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
 .drop-text label { cursor: pointer; color: var(--pink); font-weight: 900; }
@@ -822,6 +828,15 @@ h1,h2,h3,h4,h5 { font-family: var(--font-head); letter-spacing: 0.3px; color: va
     padding: 16px 14px;
     padding-bottom: 74px; /* clear fixed bottom nav */
     height: auto; overflow-y: visible;
+  }
+
+  /* ── Mobile upload bar — shown at top of main content ── */
+  .mobile-upload-bar {
+    display: flex; justify-content: stretch; margin-bottom: 14px;
+  }
+  .mobile-upload-bar .btn {
+    width: 100%; font-size: 14px; padding: 12px;
+    border-radius: var(--radius); justify-content: center;
   }
 
   /* ── Stats cards: 2 cols, smaller values ── */
